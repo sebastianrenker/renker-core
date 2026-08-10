@@ -77,4 +77,4 @@ Gezielte Inspektion des Windows-Release-Wegs von `renkervault`:
 
 - **Übernommenes Tooling:** Inno Setup (`ISCC.exe`), analog zu `renkervault/installer/RenkerVault.iss`.
 - **Ergänzt (nur additiv, keine bestehende Datei geändert):** `installer/Rencora.iss` und `.github/workflows/release-windows.yml` im rencora-Repo.
-- **Release/Asset-Status:** siehe Abschlusszusammenfassung der Session bzw. `https://github.com/sebastianrenker/rencora/releases`.
+- **Release/Asset-Status:** ✅ **erfolgreich.** CI-Lauf „Release Windows Installer" (windows-latest) grün in ~4 min: PyInstaller-Build → `choco install innosetup` → `ISCC.exe installer\Rencora.iss` → `gh release create`. Release **rencora v0.1.0** enthält das Asset `Rencora-Setup-0.1.0.exe` (121.483.173 Bytes ≈ 116 MB). URL: https://github.com/sebastianrenker/rencora/releases/tag/v0.1.0
