@@ -48,7 +48,8 @@ New, self-contained authorization slice in renker-core (stdlib-only, comment-fre
 
 - Identity is validated, not authenticated.
 - The audit log is tamper-**evident**, not immutable.
-- The guard is not yet wired into rencora's live action dispatch (see next step).
+- The live guard is wired into rencora's **file writes only** (`create_file`/`write_file`), opt-in and off
+  by default; other actions (browser, process, network) are not yet routed through it.
 
 ## Architecture decisions
 
@@ -83,11 +84,21 @@ Sebastian chose **Option A**. Implemented additively in rencora (no existing fil
   ALLOW (write into scope), DENY (outside scope), DENY (traversal). Verified locally: 4 passed with
   renker_core installed, 1 skipped without it.
 
-**Live wiring point (deliberate, not yet applied):** to enforce on real rencora file writes, construct a
-`RencoraFileGuard` from `config/renker_capabilities.json` at agent-session start and call `guard.write(
-session_id, path, content)` before `actions/file_controller` performs the write; deny → skip the write and
-surface the reason. This is a small, opt-in change to the dispatch path and is left for a focused,
-reviewed follow-up so existing rencora behavior is not altered in this phase.
+**Live wiring — APPLIED (opt-in, off by default).** `actions/file_controller.py` now consults
+`core.renker_guard.enforce_capability(target, "filesystem.write")` inside `create_file` and `write_file`,
+immediately after the existing `_is_safe_path` check. Behavior:
+- **No `config/renker_capabilities.json`** (the default) → `enforce_capability` returns `None` →
+  byte-for-byte unchanged behavior.
+- **`enforce: false`** in that config → unchanged.
+- **`renker_core` not installed** while `enforce: true` → the write is denied with a clear message
+  (deliberate misconfiguration guard).
+- **`enforce: true` + grants** → writes inside a granted scope proceed; writes outside a granted scope
+  return `"Access denied by capability policy: <reason>"` and do not touch disk.
+
+Verified against the rencora clone with `renker_core` installed: the existing `test_filesystem_security.py`
+still passes (the `_is_safe_path` home-root check is untouched), and `test_file_controller_guard.py` covers
+default-normal, allow-in-scope, deny-out-of-scope, and disabled-flag. The PyInstaller build is unaffected
+because `renker_guard` imports `renker_core` lazily and degrades to a no-op when it is absent.
 
 Grant config shape (`config/renker_capabilities.json`, optional):
 ```json
