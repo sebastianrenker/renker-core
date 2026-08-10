@@ -75,8 +75,10 @@ compatibility contract (changing them would be MAJOR).
 - Audit is **tamper-evident, not immutable**: rewriting both log + anchor, or a fully consistent chain rewrite,
   defeats it; a crash between append and anchor is detected (not silently accepted); no multi-process lock.
 - Enforcement covers **file write, read, and delete routed through the guard** (opt-in, off by default);
-  move/copy/rename and non-file actions and direct OS calls are not yet constrained; core is **not bundled**
-  in the shipped rencora `.exe` (no-op there until Option B).
+  move/copy/rename and non-file actions and direct OS calls are not yet constrained.
+- The public **`renker-core-authz`** package now exists (Apache-2.0) and rencora consumes it; enforcement is
+  proven to work with only the public package installed. Bundling into the shipped `.exe` is *prepared*
+  (requirements + `main.spec`) but **not yet build-verified** here — the real proof is the next CI release build.
 - No external security audit; no cross-OS/sustained-load perf numbers; Windows symlink escape not tested under
   privilege. Full split in `docs/marketing/claims.md`.
 
@@ -118,10 +120,11 @@ python benchmarks/bench.py                            # performance baseline
 - CI (2 jobs: quality + dependency-audit) → green
 
 ## Recommended next milestone
-Read and delete are now routed through the guard (opt-in). The remaining high-value step is to extract a
-**public authz subset** ("Option B") so enforcement works inside the shipped rencora `.exe` — this is a
-public-repo + license decision and is surfaced separately. Optionally, model move/copy/rename as
-capability decompositions (read+write / delete+write). Do not start new products first.
+Option B is done: the public Apache-2.0 [`renker-core-authz`](https://github.com/sebastianrenker/renker-core-authz)
+package is published and rencora consumes it (proven with the private core absent). The next high-value steps
+are: (1) cut a rencora release build to **build-verify** that the bundled `.exe` actually enforces; (2) make
+private `renker-core` re-export from `renker-core-authz` to remove the duplicated source of truth; (3) model
+move/copy/rename as capability decompositions. Do not start new products first.
 
 ---
 

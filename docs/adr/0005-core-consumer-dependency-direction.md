@@ -19,6 +19,13 @@ would stop being reusable and releases would block each other.
 
 ## Consequences
 - Core stays small, auditable, and independently testable.
-- The trade-off: enforcement in the shipped rencora `.exe` is currently a no-op because core is not bundled
-  there. Making core installable to rencora (a public authz subset — "Option B") is the path to real
-  enforcement in distribution, and is deliberately deferred.
+- **Option B is now implemented.** The authorization engine (identity, capabilities, policy, audit,
+  integration) is published as a standalone **public, Apache-2.0** package
+  [`renker-core-authz`](https://github.com/sebastianrenker/renker-core-authz), zero-dependency. rencora
+  prefers it (falling back to private `renker_core` for dev) and lists it in `requirements.txt` +
+  `main.spec`, so a build can bundle it and enforce. Proven: rencora's guard tests pass with **only** the
+  public package installed (private `renker_core` absent).
+- **Source-of-truth note:** the enforcement modules currently exist in both private `renker-core` and public
+  `renker-core-authz`. To avoid drift, the public package is the canonical **public** home; a follow-up should
+  make private `renker-core` re-export from it rather than keep a parallel copy. Until then, changes to the
+  authz primitives must be mirrored (tracked in the Phase report / technical debt).

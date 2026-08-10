@@ -22,7 +22,10 @@ We do not use them.
   *(test_trust_boundary.py, rencora test_file_controller_guard.py)*
 - Real rencora file **write, read, and delete** can be routed through the guard, opt-in and off by default,
   without changing default behavior. *(rencora test_file_controller_guard.py, test_filesystem_security.py still green)*
-- Zero runtime dependencies; 93 renker-core tests + 13 rencora guard tests pass; CI is green.
+- Zero runtime dependencies; 93 renker-core tests + 16 rencora guard tests pass; CI is green.
+- The authorization engine is published as a standalone **public, Apache-2.0, zero-dependency** package,
+  `renker-core-authz` (89 tests, CI green), and rencora's enforcement works with **only** that public package
+  installed. *(renker-core-authz CI; rencora guard tests against the public package)*
 
 ## UNVERIFIED (not demonstrated/measured here)
 - Performance figures beyond the single-machine micro-benchmark in `benchmarks/bench.py` (no multi-core,
@@ -33,7 +36,9 @@ We do not use them.
 
 ## FUTURE (intended, not built)
 - Cryptographic authentication of actors (signed identities).
-- Enforcement inside the shipped rencora `.exe` (requires bundling a public authz subset — "Option B").
+- **Build-verified** enforcement inside the shipped rencora `.exe`. The public `renker-core-authz` package is
+  bundled via requirements + `main.spec` and enforcement is proven at the code level, but a release build
+  confirming the packaged `.exe` enforces has not yet been run.
 - Capability wire serialization and cross-process/cross-language use via `protocol`.
 - Guarding actions beyond file write/read/delete (move/copy/rename, process, network).
 - External anchoring/notarization of the audit chain; multi-process audit coordination.

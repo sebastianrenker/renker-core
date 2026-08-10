@@ -36,7 +36,7 @@ python demo/demo_slice.py
 | identity, capabilities, policy, audit, integration (Datei-Guard) | **CURRENT** — implementiert, getestet |
 | REQUIRE_APPROVAL-Flow, Krypto-Signatur von Identitäten, weitere Aktionen (network/browser) | **PROPOSED** |
 | memory, tasks, events, experiments, evidence, protocol | **PROPOSED** — bewusst noch nicht gebaut |
-| rencora-Live-Integration (Dispatch verdrahten) | **PROPOSED** — Packaging-Entscheidung offen (siehe `PHASE_2_REPORT.md`) |
+| rencora-Live-Integration (write/read/delete, opt-in) | **CURRENT** — via public [`renker-core-authz`](https://github.com/sebastianrenker/renker-core-authz) (Apache-2.0) |
 
 Details: [`RENKER_PLATFORM_AUDIT.md`](RENKER_PLATFORM_AUDIT.md) · [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) · [`SECURITY_ATTACKS.md`](SECURITY_ATTACKS.md) · [`PHASE_2_REPORT.md`](PHASE_2_REPORT.md) · [`RENKER_LEARNING/`](RENKER_LEARNING/)
 
