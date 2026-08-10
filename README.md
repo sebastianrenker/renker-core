@@ -22,7 +22,7 @@ Dieser Stand ist ein **Bootstrap** — importierbare, getestete Platzhalter ohne
 
 ## Dokumentation
 
-- 📖 **Wiki:** https://github.com/sebastianrenker/renker-core/wiki — Vision, Architektur, Agent-Security, Roadmap, Glossar.
+- 📖 **Wiki (in-repo):** [`docs/wiki/Home.md`](docs/wiki/Home.md) — Vision, Architektur, Agent-Security, Roadmap, Glossar. *(renker-core ist privat; GitHub-Wikis sind für private Repos im aktuellen Plan nicht verfügbar, daher liegen die Wiki-Seiten als Markdown im Repo.)*
 - 🧭 **Vision (Volltext):** [`RENKER_VISION.md`](RENKER_VISION.md)
 - 🧱 **Tech-Stack-Entscheidung:** [`docs/adr/0001-tech-stack.md`](docs/adr/0001-tech-stack.md)
 - 🔎 **Ist-Zustand-Audit der Produkt-Repos:** [`docs/status/repo-audit.md`](docs/status/repo-audit.md)
