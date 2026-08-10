@@ -102,8 +102,8 @@ class Capability:
     def is_expired(self, now: datetime | None = None) -> bool:
         if self.expires_at is None:
             return False
-        moment = _as_utc(now) if now is not None else datetime.now(timezone.utc)
-        return moment >= _as_utc(self.expires_at)
+        moment = now.astimezone(timezone.utc) if now is not None else datetime.now(timezone.utc)
+        return moment >= self.expires_at.astimezone(timezone.utc)
 
     def permits_action(self, action: str) -> bool:
         return action == self.capability

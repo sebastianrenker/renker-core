@@ -72,9 +72,11 @@ class AuditLog:
     ) -> AuditEvent:
         with self._lock:
             prev_hash = self._head()
+            event_id = uuid.uuid4().hex
+            timestamp = datetime.now(timezone.utc).isoformat()
             payload = {
-                "event_id": uuid.uuid4().hex,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "event_id": event_id,
+                "timestamp": timestamp,
                 "actor": actor,
                 "action": action,
                 "target": target,
@@ -84,7 +86,19 @@ class AuditLog:
                 "outcome": outcome,
             }
             entry_hash = _hash_entry(payload, prev_hash)
-            event = AuditEvent(prev_hash=prev_hash, entry_hash=entry_hash, **payload)
+            event = AuditEvent(
+                event_id=event_id,
+                timestamp=timestamp,
+                actor=actor,
+                action=action,
+                target=target,
+                capability=capability,
+                policy_decision=policy_decision,
+                reason=reason,
+                outcome=outcome,
+                prev_hash=prev_hash,
+                entry_hash=entry_hash,
+            )
             self._append(event)
             return event
 
