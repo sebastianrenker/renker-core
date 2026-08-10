@@ -36,6 +36,26 @@ New, self-contained authorization slice in renker-core (stdlib-only, comment-fre
   wrong target, revocation, malformed identity, silent-decision, audit modification/truncation/deletion
   are all blocked/detected. Mapping in `SECURITY_ATTACKS.md`.
 
+## Hardening pass (regulated-use robustness)
+
+Acting as an adversarial end user for regulated environments (courts, hospitals, law firms), the boundary
+was attacked from many further angles; every real defect found was fixed and locked with a test:
+
+- **Windows case trick** → scope containment now uses `normcase` (same-folder-different-case allowed,
+  `Documents2` still rejected), cross-checked by a 400-example property test against `is_relative_to`.
+- **Input validation** → empty/whitespace scope bases and control/whitespace actor ids rejected;
+  empty/`None` action/target → DENY, no crash.
+- **Audit under concurrency** → `record()` is locked (8×50 threads keep the chain valid); entries are
+  `fsync`ed and the head anchor is replaced atomically; corrupt lines raise `AuditError`.
+- **Fail closed** → a present-but-malformed enforcement config denies writes instead of silently allowing.
+- **Fuzzing** → 150-example single-byte audit mutation test: every mutation is detected.
+- **Acceptance scenarios** → hospital per-patient isolation (cross-tenant write DENY + audited) and
+  law-firm capability expiry/revocation.
+
+Test count grew from 40 → **71** in renker-core (plus 5 rencora guard tests), all green; ruff clean.
+Honest new limitations were added to `docs/THREAT_MODEL.md` (audit crash window between append and anchor;
+no multi-process audit coordination) rather than hidden. Full catalog in `SECURITY_ATTACKS.md`.
+
 ## Security findings
 
 - The slice enforces confinement, least privilege, explainability, auditability, tamper-evidence, and a
