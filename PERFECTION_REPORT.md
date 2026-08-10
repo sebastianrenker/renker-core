@@ -74,8 +74,9 @@ compatibility contract (changing them would be MAJOR).
 - Identity is validated, **not authenticated** (forged trusted actor not stopped here).
 - Audit is **tamper-evident, not immutable**: rewriting both log + anchor, or a fully consistent chain rewrite,
   defeats it; a crash between append and anchor is detected (not silently accepted); no multi-process lock.
-- Enforcement covers **file writes routed through the guard** only; other actions and direct OS calls are not
-  constrained; core is **not bundled** in the shipped rencora `.exe` (no-op there until Option B).
+- Enforcement covers **file write, read, and delete routed through the guard** (opt-in, off by default);
+  move/copy/rename and non-file actions and direct OS calls are not yet constrained; core is **not bundled**
+  in the shipped rencora `.exe` (no-op there until Option B).
 - No external security audit; no cross-OS/sustained-load perf numbers; Windows symlink escape not tested under
   privilege. Full split in `docs/marketing/claims.md`.
 
@@ -117,8 +118,10 @@ python benchmarks/bench.py                            # performance baseline
 - CI (2 jobs: quality + dependency-audit) → green
 
 ## Recommended next milestone
-Extract a **public authz subset** ("Option B") so enforcement works inside the shipped rencora `.exe`, then
-route a second real action (read/delete) through the guard. Do not start new products first.
+Read and delete are now routed through the guard (opt-in). The remaining high-value step is to extract a
+**public authz subset** ("Option B") so enforcement works inside the shipped rencora `.exe` — this is a
+public-repo + license decision and is surfaced separately. Optionally, model move/copy/rename as
+capability decompositions (read+write / delete+write). Do not start new products first.
 
 ---
 

@@ -20,8 +20,8 @@ We do not use them.
   *(test_audit.py, test_hardening.py, test_properties.py)*
 - The system fails closed on unknown actions, malformed input, and (in rencora) malformed config.
   *(test_trust_boundary.py, rencora test_file_controller_guard.py)*
-- A real rencora file write can be routed through the guard, opt-in and off by default, without changing
-  default behavior. *(rencora test_file_controller_guard.py, test_filesystem_security.py still green)*
+- Real rencora file **write, read, and delete** can be routed through the guard, opt-in and off by default,
+  without changing default behavior. *(rencora test_file_controller_guard.py, test_filesystem_security.py still green)*
 - Zero runtime dependencies; 93 renker-core tests + 13 rencora guard tests pass; CI is green.
 
 ## UNVERIFIED (not demonstrated/measured here)
@@ -35,7 +35,7 @@ We do not use them.
 - Cryptographic authentication of actors (signed identities).
 - Enforcement inside the shipped rencora `.exe` (requires bundling a public authz subset — "Option B").
 - Capability wire serialization and cross-process/cross-language use via `protocol`.
-- Guarding actions beyond file writes (read/delete/move, process, network).
+- Guarding actions beyond file write/read/delete (move/copy/rename, process, network).
 - External anchoring/notarization of the audit chain; multi-process audit coordination.
 - Any external security audit or certification.
 
