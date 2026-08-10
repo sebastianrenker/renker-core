@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import threading
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -43,6 +45,7 @@ class AuditLog:
     def __init__(self, log_path: str | Path) -> None:
         self.log_path = Path(log_path)
         self.anchor_path = self.log_path.with_suffix(self.log_path.suffix + ".head")
+        self._lock = threading.Lock()
 
     def _head(self) -> str:
         if self.anchor_path.exists():
@@ -60,37 +63,48 @@ class AuditLog:
         reason: str,
         outcome: str,
     ) -> AuditEvent:
-        prev_hash = self._head()
-        payload = {
-            "event_id": uuid.uuid4().hex,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "actor": actor,
-            "action": action,
-            "target": target,
-            "capability": capability,
-            "policy_decision": policy_decision,
-            "reason": reason,
-            "outcome": outcome,
-        }
-        entry_hash = _hash_entry(payload, prev_hash)
-        event = AuditEvent(prev_hash=prev_hash, entry_hash=entry_hash, **payload)
-        self._append(event)
-        return event
+        with self._lock:
+            prev_hash = self._head()
+            payload = {
+                "event_id": uuid.uuid4().hex,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "actor": actor,
+                "action": action,
+                "target": target,
+                "capability": capability,
+                "policy_decision": policy_decision,
+                "reason": reason,
+                "outcome": outcome,
+            }
+            entry_hash = _hash_entry(payload, prev_hash)
+            event = AuditEvent(prev_hash=prev_hash, entry_hash=entry_hash, **payload)
+            self._append(event)
+            return event
 
     def _append(self, event: AuditEvent) -> None:
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.log_path, "a", encoding="utf-8") as handle:
             handle.write(_canonical(asdict(event)) + "\n")
-        self.anchor_path.write_text(event.entry_hash, encoding="utf-8")
+            handle.flush()
+            os.fsync(handle.fileno())
+        self._write_anchor(event.entry_hash)
+
+    def _write_anchor(self, value: str) -> None:
+        tmp = self.anchor_path.with_suffix(self.anchor_path.suffix + ".tmp")
+        tmp.write_text(value, encoding="utf-8")
+        os.replace(tmp, self.anchor_path)
 
     def read_all(self) -> list[AuditEvent]:
         if not self.log_path.exists():
             return []
         events: list[AuditEvent] = []
-        for line in self.log_path.read_text(encoding="utf-8").splitlines():
+        for index, line in enumerate(self.log_path.read_text(encoding="utf-8").splitlines()):
             if not line.strip():
                 continue
-            events.append(AuditEvent(**json.loads(line)))
+            try:
+                events.append(AuditEvent(**json.loads(line)))
+            except (ValueError, TypeError) as error:
+                raise AuditError(f"corrupt audit entry at line {index}: {error}") from error
         return events
 
     def verify(self) -> None:

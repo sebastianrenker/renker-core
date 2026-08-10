@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,10 +18,16 @@ class CapabilityError(ValueError):
 class PathScope:
     base: str
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.base, str) or not self.base.strip():
+            raise CapabilityError("path scope base must be a non-empty string")
+
     def _resolved_base(self) -> Path:
         return Path(self.base).expanduser().resolve()
 
     def permits(self, target: str) -> bool:
+        if not isinstance(target, str) or not target:
+            return False
         try:
             resolved_target = Path(target).expanduser().resolve()
         except (OSError, RuntimeError, ValueError):
@@ -38,9 +45,13 @@ def _os_sep() -> str:
     return "\\" if "\\" in str(Path("a") / "b") else "/"
 
 
+def _normcased_parts(path: Path) -> tuple[str, ...]:
+    return tuple(os.path.normcase(part) for part in path.parts)
+
+
 def _is_within(target: Path, base: Path) -> bool:
-    base_parts = base.parts
-    target_parts = target.parts
+    base_parts = _normcased_parts(base)
+    target_parts = _normcased_parts(target)
     if len(target_parts) <= len(base_parts):
         return False
     return target_parts[: len(base_parts)] == base_parts

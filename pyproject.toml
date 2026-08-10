@@ -13,7 +13,7 @@ authors = [{ name = "Sebastian Renker" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6", "hypothesis>=6"]
 
 [tool.setuptools.packages.find]
 where = ["."]

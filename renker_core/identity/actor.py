@@ -18,9 +18,11 @@ class Actor:
         if self.kind not in ACTOR_KINDS:
             raise IdentityError(f"unknown actor kind: {self.kind!r}")
         ident = self.identifier
-        if not ident or ident.strip() != ident:
-            raise IdentityError("actor identifier must be non-empty and untrimmed of whitespace")
-        if ":" in ident or "/" in ident or "\\" in ident or any(c.isspace() for c in ident):
+        if not isinstance(ident, str) or not ident or ident.strip() != ident:
+            raise IdentityError("actor identifier must be a non-empty, untrimmed string")
+        if any(char.isspace() for char in ident) or not ident.isprintable():
+            raise IdentityError("actor identifier has control or whitespace characters")
+        if ":" in ident or "/" in ident or "\\" in ident:
             raise IdentityError(f"actor identifier contains forbidden characters: {ident!r}")
 
     @property
