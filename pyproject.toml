@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "renker-core"
-version = "0.0.1"
+version = "0.1.0"
 description = "Shared foundation (identity, permissions, audit, policy) for the Renker platform"
 readme = "README.md"
 requires-python = ">=3.10"
