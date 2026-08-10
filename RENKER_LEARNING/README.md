@@ -37,6 +37,8 @@ The answers live at the bottom of each module under `--- reference ---`, so they
 | 08 | Prompt Injection | in this README (§08) | rencora `core/policy.py` |
 | 09 | Audit Trails | [09_audit.md](09_audit.md) | ✅ `renker_core/audit/` |
 | 10 | Rencora Security Architecture | in this README (§10) | audit report + threat model |
+| 11 | The Trust Boundary (decision outside the LLM) | [11_trust_boundary.md](11_trust_boundary.md) | ✅ `renker_core/policy/` + `test_trust_boundary.py` |
+| ★ | **Master Test** (design a protected action) | [MASTER_TEST.md](MASTER_TEST.md) | founder challenge |
 
 ---
 
