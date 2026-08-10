@@ -13,7 +13,7 @@ authors = [{ name = "Sebastian Renker" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6", "hypothesis>=6"]
+dev = ["pytest>=8", "ruff>=0.6", "hypothesis>=6", "mypy>=1.8"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -28,3 +28,9 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["renker_core"]
+ignore_missing_imports = true
+warn_unused_ignores = false
