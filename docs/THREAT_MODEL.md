@@ -66,7 +66,23 @@ protect against a fully compromised host OS account.
 4. **Auditability.** Every decision (allow and deny) appends one structured audit event.
 5. **Tamper-evidence.** The audit chain + head anchor make modification/insertion/reordering/
    tail-truncation detectable by `AuditLog.verify()`.
-6. **Safe default.** Errors, malformed input, and every unmet condition resolve to DENY.
+6. **Safe default.** Errors, malformed input, and every unmet condition resolve to DENY. This extends to
+   the enforcement config: if `config/renker_capabilities.json` exists but is unreadable/malformed while
+   enforcement is intended, writes are denied (fail **closed**), never silently allowed.
+
+## 5a. Robustness properties (added in the hardening pass)
+
+- **Case correctness.** Scope containment compares `os.path.normcase`-normalized path parts, so on
+  case-insensitive filesystems `~/Documents` and `~/documents` are the same scope, while `Documents2`
+  is still rejected (prefix confusion stays closed). Verified by a 400-example property test that
+  cross-checks `PathScope.permits` against `Path.is_relative_to` ground truth.
+- **Input validation.** Empty/whitespace scope bases and actor identifiers with whitespace or control
+  characters are rejected at construction. Empty/`None` targets and actions resolve to DENY without
+  raising.
+- **Concurrency.** `AuditLog.record` is guarded by a lock; 8 threads × 50 appends keep the hash chain
+  valid and verifiable.
+- **Durability.** Each entry is `fsync`ed and the head anchor is replaced atomically (`os.replace`).
+- **Corruption reporting.** A corrupt JSON line surfaces as `AuditError`, not a raw parse error.
 
 ## 6. Explicit non-guarantees (do not market these as solved)
 
@@ -77,4 +93,10 @@ protect against a fully compromised host OS account.
   `GuardedFilesystem`, is not constrained by renker-core. Enforcement is only as good as the
   routing of actions through the guard. Wiring rencora's dispatch to route through the guard is
   the next step and is tracked in `PHASE_2_REPORT.md`.
+- **Audit crash window.** The append is `fsync`ed and the anchor replaced atomically, but they are two
+  steps. A crash *between* them leaves the log with one more entry than the anchor records; `verify()`
+  reports this as a head mismatch (indistinguishable at a glance from a one-entry truncation). This is a
+  detected, operator-recoverable state — it is **not** silently ignored, and it is not tamper-proofing.
+- **Multi-process audit.** The in-process lock does not coordinate multiple OS processes writing the same
+  log file; a single writer (or an external file lock) is assumed.
 - This is **not** an externally audited system.

@@ -24,6 +24,25 @@ with the test that proves it.
 | 12 | **Audit full deletion** | empty the log but keep the anchor | `verify()` raises | `test_detects_full_deletion` (`test_audit.py`) |
 | 13 | **Policy bypass via no grant** | act with no capability at all | DENY (safe default) | `test_deny_no_capability` (`test_policy.py`) |
 
+## Hardening pass (regulated-use robustness)
+
+Additional attacks/edge cases, with tests in `tests/test_hardening.py`, `tests/test_properties.py`, and
+`tests/test_acceptance_regulated.py`:
+
+| # | Attack / edge case | Expected | Test |
+|---|---|---|---|
+| 14 | **Windows case trick** — scope `Documents`, target `documents/x` | ALLOW on case-insensitive FS (same dir), `Documents2` still DENY | `TestScopeHardening::test_windows_case_insensitive_same_dir_allowed`, `test_prefix_confusion_still_blocked_after_normcase` |
+| 15 | **Empty/whitespace scope** | rejected at construction | `test_empty_base_rejected`, `test_whitespace_base_rejected` |
+| 16 | **Control chars in actor id** (`\x00`, `\n`, `\x1b`) | `IdentityError` | `TestIdentityHardening::test_control_characters_rejected` |
+| 17 | **Empty / None action or target** | DENY, no crash | `test_empty_action_denied`, `test_none_action_denied_without_crash`, `test_permits_rejects_empty_target` |
+| 18 | **Concurrent audit appends** (8×50 threads) | chain stays valid + verifies | `TestAuditHardening::test_concurrent_appends_keep_chain_valid` |
+| 19 | **Audit reordering** | `verify()` raises | `test_reordering_detected` |
+| 20 | **Corrupt audit line** | `AuditError`, not a raw parse error | `test_corrupt_line_raises_audit_error` |
+| 21 | **Fuzzed scope containment** (400 examples) | `permits` never diverges from `is_relative_to` ground truth | `test_permits_never_diverges_from_ground_truth` |
+| 22 | **Fuzzed single-byte audit mutation** (150 examples) | every mutation detected | `test_any_single_byte_mutation_is_detected` |
+| 23 | **Malformed enforcement config** (rencora) | fail **closed** (deny), never open | rencora `test_file_controller_guard::test_malformed_config_fails_closed` |
+| 24 | **Cross-tenant isolation** (hospital: Dr. A's agent → Dr. B's patient) | DENY, audited | `test_acceptance_regulated::test_hospital_per_patient_isolation` |
+
 ## Known, documented limitations (attacks NOT closed)
 
 These are intentionally out of scope for this slice and are stated honestly in `docs/THREAT_MODEL.md`:
