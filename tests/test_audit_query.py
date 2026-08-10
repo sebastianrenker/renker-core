@@ -8,16 +8,31 @@ from renker_core.audit import AuditLog
 def _log(tmp_path):
     log = AuditLog(tmp_path / "audit.log")
     log.record(
-        actor="agent:a", action="filesystem.write", target="/x",
-        capability="cap_a", policy_decision="ALLOW", reason="ok", outcome="success",
+        actor="agent:a",
+        action="filesystem.write",
+        target="/x",
+        capability="cap_a",
+        policy_decision="ALLOW",
+        reason="ok",
+        outcome="success",
     )
     log.record(
-        actor="agent:b", action="filesystem.read", target="/y",
-        capability="cap_b", policy_decision="DENY", reason="scope", outcome="blocked",
+        actor="agent:b",
+        action="filesystem.read",
+        target="/y",
+        capability="cap_b",
+        policy_decision="DENY",
+        reason="scope",
+        outcome="blocked",
     )
     log.record(
-        actor="agent:a", action="filesystem.write", target="/z",
-        capability="cap_a", policy_decision="DENY", reason="revoked", outcome="blocked",
+        actor="agent:a",
+        action="filesystem.write",
+        target="/z",
+        capability="cap_a",
+        policy_decision="DENY",
+        reason="revoked",
+        outcome="blocked",
     )
     return log
 

@@ -53,9 +53,7 @@ def test_attack_prefix_confusion(tmp_path):
 
 def test_attack_expired_capability(tmp_path):
     past = datetime.now(timezone.utc) - timedelta(minutes=1)
-    store, _ = _store_with(
-        tmp_path, issued_at=past - timedelta(hours=1), expires_at=past
-    )
+    store, _ = _store_with(tmp_path, issued_at=past - timedelta(hours=1), expires_at=past)
     result = evaluate(
         actor=Actor("agent", "a"),
         action="filesystem.write",

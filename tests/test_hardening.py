@@ -175,8 +175,13 @@ class TestAuditHardening:
     def test_corrupt_line_raises_audit_error(self, tmp_path):
         log = self._log(tmp_path)
         log.record(
-            actor="a", action="x", target="t", capability=None,
-            policy_decision="ALLOW", reason="r", outcome="success",
+            actor="a",
+            action="x",
+            target="t",
+            capability=None,
+            policy_decision="ALLOW",
+            reason="r",
+            outcome="success",
         )
         with open(log.log_path, "a", encoding="utf-8") as handle:
             handle.write("{not valid json\n")
@@ -187,8 +192,13 @@ class TestAuditHardening:
         log = self._log(tmp_path)
         for _ in range(3):
             log.record(
-                actor="a", action="x", target="t", capability=None,
-                policy_decision="ALLOW", reason="r", outcome="success",
+                actor="a",
+                action="x",
+                target="t",
+                capability=None,
+                policy_decision="ALLOW",
+                reason="r",
+                outcome="success",
             )
         lines = log.log_path.read_text(encoding="utf-8").splitlines()
         lines[0], lines[1] = lines[1], lines[0]
