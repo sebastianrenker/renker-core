@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from renker_core.identity.actor import ACTOR_KINDS, Actor, IdentityError
+
 PRIMITIVE = "identity"
 
-ACTOR_KINDS = ("human", "agent", "device", "service")
-
-__all__ = ["PRIMITIVE", "ACTOR_KINDS"]
+__all__ = ["PRIMITIVE", "ACTOR_KINDS", "Actor", "IdentityError"]
