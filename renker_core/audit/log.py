@@ -41,6 +41,13 @@ def _hash_entry(payload: dict, prev_hash: str) -> str:
     return hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 
+def _parse_timestamp(value: str) -> datetime:
+    moment = datetime.fromisoformat(value)
+    if moment.tzinfo is None:
+        return moment.replace(tzinfo=timezone.utc)
+    return moment
+
+
 class AuditLog:
     def __init__(self, log_path: str | Path) -> None:
         self.log_path = Path(log_path)
@@ -106,6 +113,37 @@ class AuditLog:
             except (ValueError, TypeError) as error:
                 raise AuditError(f"corrupt audit entry at line {index}: {error}") from error
         return events
+
+    def query(
+        self,
+        *,
+        actor: str | None = None,
+        action: str | None = None,
+        decision: str | None = None,
+        outcome: str | None = None,
+        capability: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> list[AuditEvent]:
+        results: list[AuditEvent] = []
+        for event in self.read_all():
+            if actor is not None and event.actor != actor:
+                continue
+            if action is not None and event.action != action:
+                continue
+            if decision is not None and event.policy_decision != decision:
+                continue
+            if outcome is not None and event.outcome != outcome:
+                continue
+            if capability is not None and event.capability != capability:
+                continue
+            moment = _parse_timestamp(event.timestamp)
+            if since is not None and moment < since:
+                continue
+            if until is not None and moment >= until:
+                continue
+            results.append(event)
+        return results
 
     def verify(self) -> None:
         events = self.read_all()
