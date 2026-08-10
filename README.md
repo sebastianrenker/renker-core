@@ -20,6 +20,26 @@ Jedes Primitiv liegt als eigenes Unterpaket unter [`renker_core/`](renker_core/)
 
 Dieser Stand ist ein **Bootstrap** — importierbare, getestete Platzhalter ohne Geschäftslogik. Der nächste Schritt ist die Umsetzung von Identity/Permissions/Audit als lauffähige Module (Monat-1-Meilenstein).
 
+## Status: erste Plattform-Scheibe (CURRENT)
+
+Die erste vertikale Scheibe ist **implementiert und getestet**: eine reale Datei-Aktion läuft durch
+`Identity → Capability → Policy → Decision → Execute/Audit`. Ein manipulierter Agent kann die
+Capability-Grenze nicht trivial umgehen; das Verhalten ist durch automatisierte Tests abgesichert.
+
+**Demo (ALLOW + DENY end-to-end):**
+```bash
+python demo/demo_slice.py
+```
+
+| Bereich | Reife |
+|---|---|
+| identity, capabilities, policy, audit, integration (Datei-Guard) | **CURRENT** — implementiert, getestet |
+| REQUIRE_APPROVAL-Flow, Krypto-Signatur von Identitäten, weitere Aktionen (network/browser) | **PROPOSED** |
+| memory, tasks, events, experiments, evidence, protocol | **PROPOSED** — bewusst noch nicht gebaut |
+| rencora-Live-Integration (Dispatch verdrahten) | **PROPOSED** — Packaging-Entscheidung offen (siehe `PHASE_2_REPORT.md`) |
+
+Details: [`RENKER_PLATFORM_AUDIT.md`](RENKER_PLATFORM_AUDIT.md) · [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) · [`SECURITY_ATTACKS.md`](SECURITY_ATTACKS.md) · [`PHASE_2_REPORT.md`](PHASE_2_REPORT.md) · [`RENKER_LEARNING/`](RENKER_LEARNING/)
+
 ## Dokumentation
 
 - 📖 **Wiki (in-repo):** [`docs/wiki/Home.md`](docs/wiki/Home.md) — Vision, Architektur, Agent-Security, Roadmap, Glossar. *(renker-core ist privat; GitHub-Wikis sind für private Repos im aktuellen Plan nicht verfügbar, daher liegen die Wiki-Seiten als Markdown im Repo.)*
