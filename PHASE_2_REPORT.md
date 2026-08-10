@@ -72,11 +72,33 @@ Reference answers are placed after the questions so they are not seen first.
 (read `.ssh/config`, out of scope), DENY (write via `..`), then a verified tamper-evident audit trail.
 Output is reproducible and only shows functionality that actually works.
 
-## Next recommended step — DECISION REQUIRED (rencora live integration)
+## Rencora integration — DECIDED: Option A (optional adapter), implemented
 
-The slice is complete and demonstrated inside renker-core. Wiring it into **rencora's live dispatch** is
-the next step, and it hinges on one architectural decision, because renker-core is **private** and
-rencora's CI is **public**.
+Sebastian chose **Option A**. Implemented additively in rencora (no existing file changed):
+
+- `rencora/core/renker_guard.py` — `RencoraFileGuard` + helpers. Lazily imports `renker_core`; if it is
+  not installed, `is_available()` is `False` and the module is a harmless no-op (the PyInstaller build and
+  all existing behavior are unchanged).
+- `rencora/tests/test_renker_guard.py` — skips when `renker_core` is absent; when present, verifies
+  ALLOW (write into scope), DENY (outside scope), DENY (traversal). Verified locally: 4 passed with
+  renker_core installed, 1 skipped without it.
+
+**Live wiring point (deliberate, not yet applied):** to enforce on real rencora file writes, construct a
+`RencoraFileGuard` from `config/renker_capabilities.json` at agent-session start and call `guard.write(
+session_id, path, content)` before `actions/file_controller` performs the write; deny → skip the write and
+surface the reason. This is a small, opt-in change to the dispatch path and is left for a focused,
+reviewed follow-up so existing rencora behavior is not altered in this phase.
+
+Grant config shape (`config/renker_capabilities.json`, optional):
+```json
+{ "grants": [
+  { "capability": "filesystem.write", "scope": "~/Documents/drafts", "granted_to": "agent:<session-id>" }
+] }
+```
+
+### Original decision record (for history)
+
+The choice hinged on renker-core being **private** while rencora's CI is **public**.
 
 ```
 Decision required:
