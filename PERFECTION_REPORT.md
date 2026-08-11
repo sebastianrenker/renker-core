@@ -76,9 +76,11 @@ compatibility contract (changing them would be MAJOR).
   defeats it; a crash between append and anchor is detected (not silently accepted); no multi-process lock.
 - Enforcement covers **file write, read, and delete routed through the guard** (opt-in, off by default);
   move/copy/rename and non-file actions and direct OS calls are not yet constrained.
-- The public **`renker-core-authz`** package now exists (Apache-2.0) and rencora consumes it; enforcement is
-  proven to work with only the public package installed. Bundling into the shipped `.exe` is *prepared*
-  (requirements + `main.spec`) but **not yet build-verified** here — the real proof is the next CI release build.
+- The public **`renker-core-authz`** package now exists (Apache-2.0) and rencora consumes it. Enforcement is
+  **black-box verified against a real built EXE**: a PyInstaller-frozen build of rencora's file-action path
+  (bundling only the public package) passes 12/12 allow/deny/audit cases
+  (rencora `verification/EXE_ENFORCEMENT_REPORT.md`). The **full `RENCORA.exe` GUI** binary was not rebuilt
+  here — a CI release build running the same matrix is the remaining step.
 - No external security audit; no cross-OS/sustained-load perf numbers; Windows symlink escape not tested under
   privilege. Full split in `docs/marketing/claims.md`.
 
