@@ -26,11 +26,11 @@ We do not use them.
 - The authorization engine is published as a standalone **public, Apache-2.0, zero-dependency** package,
   `renker-core-authz` (89 tests, CI green), and rencora's enforcement works with **only** that public package
   installed. *(renker-core-authz CI; rencora guard tests against the public package)*
-- Enforcement is verified **black-box against a real built Windows EXE**: a PyInstaller-frozen build of
-  rencora's file-action path (bundling only `renker-core-authz`, no private `renker_core`) passes 12/12 cases
-  — allow/deny for write, read, delete; traversal/outside/wrong-actor denied; denied read does not leak file
-  content; 8 audit events present and the chain verifies; malformed config fails closed.
-  *(rencora `verification/EXE_ENFORCEMENT_REPORT.md`)*
+- **`renker-core-authz` is enforced in the shipped `RENCORA.exe`.** The full binary, built on CI via the
+  app's own `main.spec` in an environment proven to have the public package and **no** private `renker_core`,
+  passes a 12/12 black-box matrix: allow/deny for write/read/delete; traversal/outside/wrong-actor denied;
+  denied read does not leak file content; 8 audit events present and the chain verifies; malformed config
+  fails closed. *(CI run 31486004843; rencora `verification/EXE_ENFORCEMENT_REPORT.md`)*
 
 ## UNVERIFIED (not demonstrated/measured here)
 - Performance figures beyond the single-machine micro-benchmark in `benchmarks/bench.py` (no multi-core,
@@ -41,9 +41,6 @@ We do not use them.
 
 ## FUTURE (intended, not built)
 - Cryptographic authentication of actors (signed identities).
-- Black-box enforcement in the **full shipped `RENCORA.exe` GUI binary**. The enforcement code path is proven
-  in a frozen EXE, but the complete GUI executable was not rebuilt/black-box run; a CI release build running
-  the same matrix is the remaining step.
 - Capability **expiry** exposed through the rencora config (the config→capability mapping does not yet wire
   `expires_at`; expiry is engine-verified only).
 - Capability wire serialization and cross-process/cross-language use via `protocol`.
