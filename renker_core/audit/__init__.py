@@ -6,6 +6,8 @@ from renker_core.audit.log import (
     AuditError,
     AuditEvent,
     AuditLog,
+    AuditSink,
+    InMemoryAuditSink,
 )
 
 PRIMITIVE = "audit"
@@ -20,4 +22,6 @@ __all__ = [
     "AuditError",
     "AuditEvent",
     "AuditLog",
+    "AuditSink",
+    "InMemoryAuditSink",
 ]

@@ -8,6 +8,10 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from renker_core.decision import Decision
 
 CHAIN_HASH_ALGORITHM = "sha256"
 GENESIS_HASH = "0" * 64
@@ -26,6 +30,8 @@ class AuditEvent:
     outcome: str
     prev_hash: str
     entry_hash: str
+    resource: str | None = None
+    decision_id: str | None = None
 
 
 class AuditError(Exception):
@@ -69,6 +75,8 @@ class AuditLog:
         policy_decision: str,
         reason: str,
         outcome: str,
+        resource: str | None = None,
+        decision_id: str | None = None,
     ) -> AuditEvent:
         with self._lock:
             prev_hash = self._head()
@@ -84,6 +92,8 @@ class AuditLog:
                 "policy_decision": policy_decision,
                 "reason": reason,
                 "outcome": outcome,
+                "resource": resource,
+                "decision_id": decision_id,
             }
             entry_hash = _hash_entry(payload, prev_hash)
             event = AuditEvent(
@@ -98,9 +108,24 @@ class AuditLog:
                 outcome=outcome,
                 prev_hash=prev_hash,
                 entry_hash=entry_hash,
+                resource=resource,
+                decision_id=decision_id,
             )
             self._append(event)
             return event
+
+    def record_decision(self, decision: Decision, outcome: str = "recorded") -> AuditEvent:
+        return self.record(
+            actor=decision.subject,
+            action=decision.action,
+            target=decision.resource,
+            capability=decision.capability_id,
+            policy_decision=decision.effect.value,
+            reason=decision.reason,
+            outcome=outcome,
+            resource=decision.resource,
+            decision_id=decision.decision_id,
+        )
 
     def _append(self, event: AuditEvent) -> None:
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -173,6 +198,8 @@ class AuditLog:
                 "policy_decision": event.policy_decision,
                 "reason": event.reason,
                 "outcome": event.outcome,
+                "resource": event.resource,
+                "decision_id": event.decision_id,
             }
             if event.prev_hash != prev:
                 raise AuditError(f"broken chain at entry {index}: prev_hash mismatch")
@@ -185,3 +212,74 @@ class AuditLog:
                 raise AuditError("head anchor mismatch: log tail was truncated or replaced")
         elif self.anchor_path.exists() and self._head() != GENESIS_HASH:
             raise AuditError("head anchor present but log is empty: entries were deleted")
+
+
+class AuditSink(Protocol):
+    def record_decision(self, decision: Decision, outcome: str = "recorded") -> AuditEvent: ...
+
+
+class InMemoryAuditSink:
+    def __init__(self) -> None:
+        self._events: list[AuditEvent] = []
+        self._prev = GENESIS_HASH
+        self._lock = threading.Lock()
+
+    def record_decision(self, decision: Decision, outcome: str = "recorded") -> AuditEvent:
+        with self._lock:
+            event_id = uuid.uuid4().hex
+            timestamp = datetime.now(timezone.utc).isoformat()
+            payload = {
+                "event_id": event_id,
+                "timestamp": timestamp,
+                "actor": decision.subject,
+                "action": decision.action,
+                "target": decision.resource,
+                "capability": decision.capability_id,
+                "policy_decision": decision.effect.value,
+                "reason": decision.reason,
+                "outcome": outcome,
+                "resource": decision.resource,
+                "decision_id": decision.decision_id,
+            }
+            entry_hash = _hash_entry(payload, self._prev)
+            event = AuditEvent(
+                event_id=event_id,
+                timestamp=timestamp,
+                actor=decision.subject,
+                action=decision.action,
+                target=decision.resource,
+                capability=decision.capability_id,
+                policy_decision=decision.effect.value,
+                reason=decision.reason,
+                outcome=outcome,
+                prev_hash=self._prev,
+                entry_hash=entry_hash,
+                resource=decision.resource,
+                decision_id=decision.decision_id,
+            )
+            self._events.append(event)
+            self._prev = entry_hash
+            return event
+
+    def events(self) -> list[AuditEvent]:
+        return list(self._events)
+
+    def verify(self) -> None:
+        prev = GENESIS_HASH
+        for index, event in enumerate(self._events):
+            payload = {
+                "event_id": event.event_id,
+                "timestamp": event.timestamp,
+                "actor": event.actor,
+                "action": event.action,
+                "target": event.target,
+                "capability": event.capability,
+                "policy_decision": event.policy_decision,
+                "reason": event.reason,
+                "outcome": event.outcome,
+                "resource": event.resource,
+                "decision_id": event.decision_id,
+            }
+            if event.prev_hash != prev or event.entry_hash != _hash_entry(payload, prev):
+                raise AuditError(f"tampered in-memory audit at entry {index}")
+            prev = event.entry_hash
