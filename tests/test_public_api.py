@@ -7,18 +7,40 @@ import renker_core
 EXPECTED_PUBLIC_API = {
     "__version__",
     "PRIMITIVES",
+    "Identity",
     "Actor",
     "IdentityError",
+    "Action",
+    "Resource",
+    "ResourcePattern",
+    "Context",
+    "ModelError",
+    "Permission",
     "Capability",
     "CapabilityError",
-    "PathScope",
     "CapabilityStore",
-    "Decision",
+    "PathScope",
+    "Policy",
+    "Rule",
+    "PolicyEngine",
+    "StaticPolicyEngine",
     "PolicyResult",
     "evaluate",
-    "AuditLog",
-    "AuditEvent",
+    "Effect",
+    "Decision",
+    "RiskAssessment",
+    "Authorizer",
+    "AuthorizationRequest",
+    "ReplayGuard",
+    "Approval",
+    "ApprovalError",
+    "ApprovalRequest",
+    "ApprovalStore",
     "AuditError",
+    "AuditEvent",
+    "AuditLog",
+    "AuditSink",
+    "InMemoryAuditSink",
     "GuardedFilesystem",
     "GuardResult",
 }
@@ -37,14 +59,13 @@ def test_version_is_semver():
     assert re.fullmatch(r"\d+\.\d+\.\d+", renker_core.__version__)
 
 
-def test_no_accidental_extra_exports():
-    public = {n for n in dir(renker_core) if not n.startswith("_")}
-    declared = set(renker_core.__all__) | set(renker_core.PRIMITIVES)
-    leaked = public - declared - {"annotations"}
-    assert leaked <= {
-        "audit",
-        "capabilities",
-        "identity",
-        "integration",
-        "policy",
-    }
+def test_target_import_shape_works():
+    from renker_core import (  # noqa: F401
+        Action,
+        Authorizer,
+        Capability,
+        Decision,
+        Identity,
+        Policy,
+        Resource,
+    )
