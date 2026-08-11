@@ -2,17 +2,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from typing import Protocol
 
 from renker_core.capabilities.model import Capability
 from renker_core.capabilities.store import CapabilityStore
+from renker_core.decision import Decision as DecisionRecord
+from renker_core.effect import Effect
 from renker_core.identity.actor import Actor
+from renker_core.identity.subject import Identity
+from renker_core.model import Action, Context, Resource
+from renker_core.policy.policy import Policy
+from renker_core.risk import assess
+
+Decision = Effect
+
+_RESTRICTION_ORDER = {Effect.ALLOW: 0, Effect.REQUIRE_APPROVAL: 1, Effect.DENY: 2}
 
 
-class Decision(str, Enum):
-    ALLOW = "ALLOW"
-    DENY = "DENY"
-    REQUIRE_APPROVAL = "REQUIRE_APPROVAL"
+def _more_restrictive(current: Effect, candidate: Effect) -> Effect:
+    return candidate if _RESTRICTION_ORDER[candidate] > _RESTRICTION_ORDER[current] else current
 
 
 @dataclass(frozen=True)
@@ -126,3 +134,101 @@ def _replace(base: PolicyResult, decision: Decision, reason: str) -> PolicyResul
         allowed_scope=base.allowed_scope,
         capability_id=base.capability_id,
     )
+
+
+class PolicyEngine(Protocol):
+    def evaluate(
+        self,
+        *,
+        subject: Identity,
+        action: Action,
+        resource: Resource,
+        context: Context,
+    ) -> DecisionRecord: ...
+
+
+_APPROVAL_EFFECT = {
+    "auto": Effect.ALLOW,
+    "human": Effect.REQUIRE_APPROVAL,
+    "deny": Effect.DENY,
+}
+
+
+class StaticPolicyEngine:
+    def __init__(self, store: CapabilityStore, policy: Policy) -> None:
+        self._store = store
+        self._policy = policy
+
+    def evaluate(
+        self,
+        *,
+        subject: Identity,
+        action: Action,
+        resource: Resource,
+        context: Context,
+    ) -> DecisionRecord:
+        risk = assess(action, resource, context)
+        obligations = [f"risk:{risk.tier}"]
+
+        if subject.is_expired():
+            return self._decision(
+                Effect.DENY, subject, action, resource, "identity has expired", obligations, None
+            )
+
+        capability = self._find_capability(subject, action, resource)
+        if capability is None:
+            return self._decision(
+                Effect.DENY,
+                subject,
+                action,
+                resource,
+                f"no capability grants {action.dotted} on {resource.identifier} to {subject.urn}",
+                obligations,
+                None,
+            )
+
+        effect = _APPROVAL_EFFECT.get(capability.approval_policy, Effect.DENY)
+        reason = "within capability scope, action and lifetime"
+        for rule in self._policy.rules:
+            if rule.matches(action, resource, context, risk):
+                effect = _more_restrictive(effect, rule.effect)
+                obligations.extend(rule.obligations)
+                reason = rule.reason
+        return self._decision(
+            effect, subject, action, resource, reason, obligations, capability.capability_id
+        )
+
+    def _find_capability(
+        self, subject: Identity, action: Action, resource: Resource
+    ) -> Capability | None:
+        for candidate in self._store.find(subject.urn, action.dotted):
+            if candidate.is_expired():
+                continue
+            if self._store.is_revoked(candidate.capability_id):
+                continue
+            if not candidate.permits_target(resource.identifier):
+                continue
+            return candidate
+        return None
+
+    def _decision(
+        self,
+        effect: Effect,
+        subject: Identity,
+        action: Action,
+        resource: Resource,
+        reason: str,
+        obligations: list[str],
+        capability_id: str | None,
+    ) -> DecisionRecord:
+        return DecisionRecord(
+            effect=effect,
+            subject=subject.urn,
+            action=action.dotted,
+            resource=resource.urn,
+            policy_id=self._policy.policy_id,
+            policy_version=self._policy.version,
+            reason=reason,
+            obligations=tuple(obligations),
+            capability_id=capability_id,
+        )
