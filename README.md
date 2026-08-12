@@ -19,29 +19,43 @@ change *what is requested*, never *what is allowed*.
 ```python
 from datetime import datetime, timezone
 from renker_core import (
-    Identity, Action, Resource, Context, Capability, CapabilityStore, PathScope,
-    Policy, StaticPolicyEngine, Authorizer, AuthorizationRequest, InMemoryAuditSink,
+    Identity,
+    Action,
+    Resource,
+    Context,
+    Capability,
+    CapabilityStore,
+    PathScope,
+    Policy,
+    StaticPolicyEngine,
+    Authorizer,
+    AuthorizationRequest,
+    InMemoryAuditSink,
 )
 
 store = CapabilityStore()
-store.grant(Capability(
-    capability="filesystem.write",
-    scope=PathScope(base="~/project/drafts"),
-    granted_to="agent:session-1",
-    granted_by="human:owner",
-    issued_at=datetime.now(timezone.utc),
-    expires_at=None,
-))
+store.grant(
+    Capability(
+        capability="filesystem.write",
+        scope=PathScope(base="~/project/drafts"),
+        granted_to="agent:session-1",
+        granted_by="human:owner",
+        issued_at=datetime.now(timezone.utc),
+        expires_at=None,
+    )
+)
 
 authorizer = Authorizer(StaticPolicyEngine(store, Policy("default", "1")), InMemoryAuditSink())
 
-decision = authorizer.authorize(AuthorizationRequest(
-    subject=Identity("agent", "session-1"),
-    action=Action("filesystem", "write"),
-    resource=Resource("file", "~/project/drafts/note.md"),
-    context=Context(environment="development", user_present=True),
-))
-print(decision.effect.value, "-", decision.reason)   # ALLOW - within capability scope...
+decision = authorizer.authorize(
+    AuthorizationRequest(
+        subject=Identity("agent", "session-1"),
+        action=Action("filesystem", "write"),
+        resource=Resource("file", "~/project/drafts/note.md"),
+        context=Context(environment="development", user_present=True),
+    )
+)
+print(decision.effect.value, "-", decision.reason)  # ALLOW - within capability scope...
 ```
 
 ## 4. Architecture
@@ -99,13 +113,32 @@ Python ≥ 3.10, **zero runtime dependencies** (standard library only).
 Import everything from the top level:
 ```python
 from renker_core import (
-    Identity, Action, Resource, ResourcePattern, Context,
-    Capability, Permission, CapabilityStore, PathScope,
-    Policy, Rule, PolicyEngine, StaticPolicyEngine,
-    Effect, Decision, RiskAssessment,
-    Authorizer, AuthorizationRequest, ReplayGuard,
-    Approval, ApprovalRequest, ApprovalStore,
-    AuditLog, AuditSink, InMemoryAuditSink, AuditEvent,
+    Identity,
+    Action,
+    Resource,
+    ResourcePattern,
+    Context,
+    Capability,
+    Permission,
+    CapabilityStore,
+    PathScope,
+    Policy,
+    Rule,
+    PolicyEngine,
+    StaticPolicyEngine,
+    Effect,
+    Decision,
+    RiskAssessment,
+    Authorizer,
+    AuthorizationRequest,
+    ReplayGuard,
+    Approval,
+    ApprovalRequest,
+    ApprovalStore,
+    AuditLog,
+    AuditSink,
+    InMemoryAuditSink,
+    AuditEvent,
 )
 ```
 The public surface is frozen in `renker_core.__all__` and guarded by `tests/test_public_api.py`.
