@@ -144,7 +144,8 @@ class PolicyEngine(Protocol):
         action: Action,
         resource: Resource,
         context: Context,
-    ) -> DecisionRecord: ...
+    ) -> DecisionRecord:
+        """Return the decision record for the request."""
 
 
 _APPROVAL_EFFECT = {

@@ -215,7 +215,8 @@ class AuditLog:
 
 
 class AuditSink(Protocol):
-    def record_decision(self, decision: Decision, outcome: str = "recorded") -> AuditEvent: ...
+    def record_decision(self, decision: Decision, outcome: str = "recorded") -> AuditEvent:
+        """Record ``decision`` and return the resulting audit event."""
 
 
 class InMemoryAuditSink:
