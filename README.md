@@ -96,8 +96,17 @@ pip install -e ".[dev]"    # Python >= 3.10, zero runtime dependencies
 ```python
 from datetime import datetime, timezone
 from renker_core import (
-    Identity, Action, Resource, Context, Capability, CapabilityStore,
-    PathScope, Policy, StaticPolicyEngine, Authorizer, AuthorizationRequest,
+    Identity,
+    Action,
+    Resource,
+    Context,
+    Capability,
+    CapabilityStore,
+    PathScope,
+    Policy,
+    StaticPolicyEngine,
+    Authorizer,
+    AuthorizationRequest,
     InMemoryAuditSink,
 )
 

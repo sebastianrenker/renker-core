@@ -69,4 +69,8 @@ def test_target_import_shape_works():
         Policy,
         Resource,
     )
-    assert all(obj is not None for obj in (Action, Authorizer, Capability, Decision, Identity, Policy, Resource))
+
+    assert all(
+        obj is not None
+        for obj in (Action, Authorizer, Capability, Decision, Identity, Policy, Resource)
+    )
